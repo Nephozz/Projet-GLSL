@@ -5,6 +5,13 @@ precision mediump float;
 uniform vec2 u_resolution;
 uniform float u_time;
 
+float invstep(float edge, float x) {
+    return step(0., edge - x);
+}
+
+vec2 invstep(vec2 edge, vec2 x) {
+    return vec2(invstep(edge.x, x.x), invstep(edge.y, x.y));
+}
 // Create a rectangular shape according to the width and height at a given center position
 float rectangle_shape(vec2 uv, vec2 center, float width, float height) {
     vec2 size = .5 * vec2(width, height);
@@ -21,6 +28,20 @@ float rectangle_shape(vec2 uv, vec2 center, float width, float height) {
 //Overload of the rectangle_shape which now support vec2 for the size
 float rectangle_shape(vec2 uv, vec2 center, vec2 size) {
     return rectangle_shape(uv, center, size.x, size.y);
+}
+
+
+float rectangle_outline(vec2 uv, vec2 center, float width, float height, float thickness) {
+    vec2 size = .5 * vec2(width, height);
+
+    vec2 left_bottom = center - size;
+    vec2 right_top = center + size;
+
+    vec2 shaper = step(left_bottom, uv) * invstep(left_bottom, uv);
+    //shaper *= step(-right_top, - uv);
+    //shaper *= invstep(-right_top, - uv - thickness);
+
+    return shaper.x * shaper.y;
 }
 
 mat2 rot(float a) {
@@ -53,7 +74,11 @@ void main() {
 
     //uv *= rot(t/ .2);
     
-    col = anim_sympa(.4, t, uv);
+    col = anim_sympa(1., t, uv);
+
+    //col += rectangle_outline(uv, vec2(0), .5, .5, .1);
+
+    //col *= step(0., a -st.x);
 
     gl_FragColor = vec4(col, 1.);
 }
